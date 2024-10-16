@@ -1,5 +1,4 @@
 import { App, Stack } from "aws-cdk-lib";
-import { createCodeCommitRepo, createIamUserForCodeCommit } from "./resources/code-commit";
 import { CodePipeline, CodePipelineSource, ManualApprovalStep, ShellStep } from "aws-cdk-lib/pipelines";
 import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { BuildSpec } from "aws-cdk-lib/aws-codebuild";
@@ -18,7 +17,7 @@ import { PIPELINE_PROD_MANUAL_APPROVAL } from "../workshop-stacks/config/pipelin
 export class PipelineStack extends Stack {
   constructor(app: App, private mediaStage: MediaServicesStage) {
     super(app, "workshop-pipeline-stack", {
-      description: 'Workshop pipeline stack (uksb-1tupboc33)',
+      description: "Workshop pipeline stack (uksb-1tupboc33)",
       env: {
         region: process.env.CDK_DEFAULT_REGION,
         account: process.env.CDK_DEFAULT_ACCOUNT,
@@ -26,14 +25,24 @@ export class PipelineStack extends Stack {
     });
   }
 
-  protected repo = createCodeCommitRepo(this);
-  protected user = createIamUserForCodeCommit(this);
+  protected githubOwner = "metaltoad";
+  protected githubRepo = "cicd-mediaservices-workshop";
+
+  // Define the connection ARN (This should be the ARN of your existing CodeStar connection)
+  // connectionArn = "arn:aws:codeconnections:us-east-1:593793053156:connection/0ce39d0d-884d-4915-bcd9-79978e8896dc";
 
   protected pipelines = this.createPipelines();
 
   createPipelines() {
     const pipeline = new CodePipeline(this, "pipeline", {
       selfMutation: true,
+      synth: new ShellStep("Synth", {
+        input: CodePipelineSource.connection(`${this.githubOwner}/${this.githubRepo}`, "task-1", {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          connectionArn: "arn:aws:codeconnections:us-east-1:593793053156:connection/0ce39d0d-884d-4915-bcd9-79978e8896dc", // Specify the existing connection ARN
+        }),
+        commands: ["npm ci", "npm run build", "npx cdk synth"],
+      }),
       codeBuildDefaults: {
         partialBuildSpec: BuildSpec.fromObject({
           env: {
@@ -48,10 +57,6 @@ export class PipelineStack extends Stack {
           }),
         ],
       },
-      synth: new ShellStep("synth", {
-        input: CodePipelineSource.codeCommit(this.repo, "main"),
-        commands: ["npm install", "npm run cdk synth"],
-      }),
     });
 
     if (PIPELINE_PROD_MANUAL_APPROVAL) {
@@ -59,7 +64,7 @@ export class PipelineStack extends Stack {
       manualApprovalWave.addPre(new ManualApprovalStep("prod-environment-catch"));
     }
     pipeline.addStage(this.mediaStage, createPreAndPostBuildActions(this.mediaStage.stack.medialive.outputNames.channelName));
-    
+
     return pipeline;
   }
 }
