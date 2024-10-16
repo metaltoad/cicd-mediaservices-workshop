@@ -8,6 +8,7 @@ variable "github_repo" {
 # Removed github_token variable as it's no longer needed with CodeStar connections
 
 resource "aws_codestarconnections_connection" "github_connection" {
+  name = "MetalToad-Github-hackathin"
   arn           = "arn:aws:codestar-connections:us-east-1:123456789012:connection/abcdef01-2345-6789-abcd-ef0123456789"
   provider_type = "GitHub"
 }
