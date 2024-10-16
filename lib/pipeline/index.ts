@@ -42,6 +42,8 @@ export class PipelineStack extends Stack {
           connectionArn: "arn:aws:codeconnections:us-east-1:593793053156:connection/0ce39d0d-884d-4915-bcd9-79978e8896dc", // Specify the existing connection ARN
         }),
         commands: [
+          "pwd",
+          'ls',
           "aws cloudformation deploy \
           --template-file cloudformation/remote-state.yml \
           --stack-name terraform-remote-state",
