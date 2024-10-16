@@ -44,9 +44,10 @@ export class PipelineStack extends Stack {
         commands: [
           "pwd",
           'ls',
-          "aws cloudformation deploy \
-          --template-file cloudformation/remote-state.yml \
-          --stack-name terraform-remote-state",
+          "aws cloudformation deploy --template-file ./cloudformation/remote_state.yaml --stack-name terraform-remote-state",
+          "curl -s -qL -o terraform_install.zip https://releases.hashicorp.com/terraform/0.11.13/terraform_0.11.13_linux_amd64.zip",
+          "unzip terraform_install.zip -d /usr/bin/",
+          "chmod +x /usr/bin/terraform",
           "terraform init",
           "terraform plan",
           "terraform apply -auto-approve",
@@ -63,7 +64,7 @@ export class PipelineStack extends Stack {
         rolePolicy: [
           new PolicyStatement({
             effect: Effect.ALLOW,
-            actions: ["cloudformation:DescribeStacks", "medialive:DescribeChannel", "medialive:StopChannel", "medialive:StartChannel"],
+            actions: ["cloudformation:DescribeStacks", "medialive:DescribeChannel", "medialive:StopChannel", "medialive:StartChannel", "cloudformation:*"],
             resources: ["*"],
           }),
         ],

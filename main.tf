@@ -15,19 +15,14 @@ provider "aws" {
   region = var.aws_region
 }
 
-variable "aws_region" {
-  description = "AWS region to deploy resources"
-  default     = "us-west-2"
-}
+# AWS region is defined in variables.tf
 
 module "media_services" {
   source = "./modules/media_services"
-  aws_region = var.aws_region
 }
 
 module "pipeline" {
   source = "./modules/pipeline"
-  aws_region = var.aws_region
 }
 
 output "cloudfront_domain_name" {

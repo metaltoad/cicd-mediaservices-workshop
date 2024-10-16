@@ -5,10 +5,12 @@ variable "github_repo" {
   type        = string
 }
 
-variable "github_token" {
-  description = "GitHub personal access token"
-  type        = string
-  sensitive   = true
+# Removed github_token variable as it's no longer needed with CodeStar connections
+
+resource "aws_codestarconnections_connection" "github_connection" {
+  name = "MetalToad-Github-hackathin"
+  arn           = "arn:aws:codestar-connections:us-east-1:123456789012:connection/abcdef01-2345-6789-abcd-ef0123456789"
+  provider_type = "GitHub"
 }
 
 resource "aws_iam_openid_connect_provider" "github_oidc" {
@@ -84,16 +86,15 @@ resource "aws_codepipeline" "pipeline" {
     action {
       name             = "Source"
       category         = "Source"
-      owner            = "ThirdParty"
-      provider         = "GitHub"
+      owner            = "AWS"
+      provider         = "CodeStarSourceConnection"
       version          = "1"
       output_artifacts = ["source_output"]
 
       configuration = {
-        Owner      = split("/", var.github_repo)[0]
-        Repo       = split("/", var.github_repo)[1]
-        Branch     = "main"
-        OAuthToken = var.github_token
+        ConnectionArn    = aws_codestarconnections_connection.github_connection.arn
+        FullRepositoryId = var.github_repo
+        BranchName       = "main"
       }
     }
   }
@@ -129,11 +130,6 @@ resource "aws_codebuild_project" "terraform_build" {
     image                       = "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
-
-    environment_variable {
-      name  = "AWS_DEFAULT_REGION"
-      value = var.aws_region
-    }
   }
 
   source {
