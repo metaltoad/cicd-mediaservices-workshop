@@ -1,6 +1,6 @@
 import { App, Stack } from "aws-cdk-lib";
-import { createCodeCommitRepo, createIamUserForCodeCommit } from "./resources/code-commit";
-import { CodePipeline, CodePipelineSource, ManualApprovalStep, ShellStep } from "aws-cdk-lib/pipelines";
+import { CodePipelineSource } from "aws-cdk-lib/pipelines";
+import { CodePipeline, ManualApprovalStep, ShellStep } from "aws-cdk-lib/pipelines";
 import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { BuildSpec } from "aws-cdk-lib/aws-codebuild";
 import { createPreAndPostBuildActions } from "./resources/code-build";
@@ -26,14 +26,18 @@ export class PipelineStack extends Stack {
     });
   }
 
-  protected repo = createCodeCommitRepo(this);
-  protected user = createIamUserForCodeCommit(this);
+  protected githubOwner = 'your-github-username-or-org';
+  protected githubRepo = 'your-github-repo-name';
 
   protected pipelines = this.createPipelines();
 
   createPipelines() {
     const pipeline = new CodePipeline(this, "pipeline", {
       selfMutation: true,
+      synth: new ShellStep('Synth', {
+        input: CodePipelineSource.gitHub(`${this.githubOwner}/${this.githubRepo}`, 'main'),
+        commands: ['npm ci', 'npm run build', 'npx cdk synth']
+      }),
       codeBuildDefaults: {
         partialBuildSpec: BuildSpec.fromObject({
           env: {
@@ -48,10 +52,6 @@ export class PipelineStack extends Stack {
           }),
         ],
       },
-      synth: new ShellStep("synth", {
-        input: CodePipelineSource.codeCommit(this.repo, "main"),
-        commands: ["npm install", "npm run cdk synth"],
-      }),
     });
 
     if (PIPELINE_PROD_MANUAL_APPROVAL) {

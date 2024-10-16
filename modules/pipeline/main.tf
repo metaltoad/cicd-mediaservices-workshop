@@ -1,18 +1,27 @@
-# Pipeline module
+# GitHub Actions OIDC Authentication module
 
-resource "aws_codecommit_repository" "repo" {
-  repository_name = "workshop-repo"
-  description     = "CodeCommit repository for the workshop"
+variable "github_repo" {
+  description = "The GitHub repository in the format 'owner/repo'"
+  type        = string
 }
 
-resource "aws_iam_user" "codecommit_user" {
-  name = "workshop-codecommit-user"
+variable "github_token" {
+  description = "GitHub personal access token"
+  type        = string
+  sensitive   = true
 }
 
-resource "aws_iam_user_policy_attachment" "codecommit_access" {
-  user       = aws_iam_user.codecommit_user.name
-  policy_arn = "arn:aws:iam::aws:policy/AWSCodeCommitPowerUser"
+resource "aws_iam_openid_connect_provider" "github_oidc" {
+  url = "https://token.actions.githubusercontent.com"
+
+  client_id_list = ["sts.amazonaws.com"]
+
+  thumbprint_list = [
+    "6938fd4d98bab03faadb97b34396831e3780aea1"
+  ]
 }
+
+# CodeCommit resources have been removed as we're now using GitHub
 
 resource "aws_iam_role" "pipeline_role" {
   name = "workshop-pipeline-role"
@@ -75,14 +84,16 @@ resource "aws_codepipeline" "pipeline" {
     action {
       name             = "Source"
       category         = "Source"
-      owner            = "AWS"
-      provider         = "CodeCommit"
+      owner            = "ThirdParty"
+      provider         = "GitHub"
       version          = "1"
       output_artifacts = ["source_output"]
 
       configuration = {
-        RepositoryName = aws_codecommit_repository.repo.repository_name
-        BranchName     = "main"
+        Owner      = split("/", var.github_repo)[0]
+        Repo       = split("/", var.github_repo)[1]
+        Branch     = "main"
+        OAuthToken = var.github_token
       }
     }
   }
@@ -118,6 +129,11 @@ resource "aws_codebuild_project" "terraform_build" {
     image                       = "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
+
+    environment_variable {
+      name  = "AWS_DEFAULT_REGION"
+      value = var.aws_region
+    }
   }
 
   source {
@@ -144,47 +160,37 @@ resource "aws_codebuild_project" "terraform_build" {
   }
 }
 
-resource "aws_iam_role" "codebuild_role" {
-  name = "workshop-codebuild-role"
+resource "aws_iam_role" "github_actions_role" {
+  name = "github-actions-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Action = "sts:AssumeRole"
+        Action = "sts:AssumeRoleWithWebIdentity"
         Effect = "Allow"
         Principal = {
-          Service = "codebuild.amazonaws.com"
+          Federated = aws_iam_openid_connect_provider.github_oidc.arn
+        }
+        Condition = {
+          StringLike = {
+            "token.actions.githubusercontent.com:sub": "repo:${var.github_repo}:*"
+          }
         }
       }
     ]
   })
 }
 
-resource "aws_iam_role_policy_attachment" "codebuild_policy" {
+resource "aws_iam_role_policy_attachment" "github_actions_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
-  role       = aws_iam_role.codebuild_role.name
+  role       = aws_iam_role.github_actions_role.name
 }
 
-resource "aws_s3_bucket" "artifact_store" {
-  bucket = "codepipeline-artifact-store-${data.aws_caller_identity.current.account_id}"
+output "github_actions_role_arn" {
+  value       = aws_iam_role.github_actions_role.arn
+  description = "ARN of the IAM role for GitHub Actions"
 }
 
-data "aws_caller_identity" "current" {}
-
-resource "aws_s3_bucket_public_access_block" "artifact_store" {
-  bucket = aws_s3_bucket.artifact_store.id
-
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
-output "codecommit_repo_url" {
-  value = aws_codecommit_repository.repo.clone_url_http
-}
-
-output "pipeline_name" {
-  value = aws_codepipeline.pipeline.name
-}
+# S3 bucket and related resources have been removed as they are no longer needed for GitHub Actions.
+# Outputs related to CodeCommit and CodePipeline have been removed.
