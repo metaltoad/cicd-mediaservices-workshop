@@ -91,7 +91,6 @@ resource "aws_cloudwatch_dashboard" "media_dashboard" {
           ]
           view    = "timeSeries"
           stacked = false
-          region  = var.aws_region
           title   = "MediaLive Network I/O"
         }
       },
@@ -108,7 +107,6 @@ resource "aws_cloudwatch_dashboard" "media_dashboard" {
           ]
           view    = "timeSeries"
           stacked = false
-          region  = var.aws_region
           title   = "MediaPackage Egress Bytes"
         }
       }
