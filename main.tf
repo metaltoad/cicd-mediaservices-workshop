@@ -12,7 +12,7 @@ terraform {
 }
 
 provider "aws" {
-  region = var.aws_region
+  region = "us-east-1"
 }
 
 # AWS region is defined in variables.tf
@@ -23,6 +23,7 @@ module "media_services" {
 
 module "pipeline" {
   source = "./modules/pipeline"
+  github_repo = "metaltoad/cicd-mediaservices-workshop"
 }
 
 output "cloudfront_domain_name" {
