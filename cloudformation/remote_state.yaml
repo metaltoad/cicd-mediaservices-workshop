@@ -5,7 +5,7 @@ Resources:
   TerraformStateBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub 'terraform-remote-state-bucket-${AWS::AccountId}'
+      BucketName: !Sub 'terraform-remote-state-bucket-mthackaton2024'
       VersioningConfiguration:
         Status: Enabled
       BucketEncryption:
