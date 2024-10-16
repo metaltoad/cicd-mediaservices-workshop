@@ -1,0 +1,92 @@
+name: 'Terraform CI/CD'
+
+on:
+  push:
+    branches:
+      - main
+      - task-1-terraform
+  pull_request:
+
+jobs:
+  deploy-remote-state:
+    name: 'Deploy Remote State'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
+
+    - name: Deploy CloudFormation Stack
+      run: |
+        aws cloudformation deploy \
+          --template-file cloudformation/remote_state.yaml \
+          --stack-name terraform-remote-state \
+          --capabilities CAPABILITY_NAMED_IAM
+
+  terraform:
+    name: 'Terraform'
+    needs: deploy-remote-state
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
+
+    - name: Get Remote State Info
+      run: |
+        BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name terraform-remote-state --query "Stacks[0].Outputs[?OutputKey=='StateBucketName'].OutputValue" --output text)
+        LOCK_TABLE=$(aws cloudformation describe-stacks --stack-name terraform-remote-state --query "Stacks[0].Outputs[?OutputKey=='LockTableName'].OutputValue" --output text)
+        echo "BUCKET_NAME=$BUCKET_NAME" >> $GITHUB_ENV
+        echo "LOCK_TABLE=$LOCK_TABLE" >> $GITHUB_ENV
+
+    - name: Terraform Init
+      run: |
+        REGION=$(aws cloudformation describe-stacks --stack-name terraform-remote-state --query "Stacks[0].Outputs[?OutputKey=='Region'].OutputValue" --output text)
+        terraform init \
+          -backend-config="bucket=${{ env.BUCKET_NAME }}" \
+          -backend-config="key=terraform.tfstate" \
+          -backend-config="region=$REGION" \
+          -backend-config="dynamodb_table=${{ env.LOCK_TABLE }}"
+
+    - name: Terraform Format
+      run: terraform fmt -check
+
+    - name: Terraform Plan
+      run: terraform plan -out=tfplan
+      
+    - name: Terraform Apply
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: terraform apply -auto-approve tfplan
+
+    - name: Terraform Output
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        echo "CloudFront Domain: $(terraform output -raw cloudfront_domain_name)"
+        echo "HLS Endpoint URL: $(terraform output -raw hls_endpoint_url)"
+        echo "CodeCommit Repo URL: $(terraform output -raw codecommit_repo_url)"
+        echo "Pipeline Name: $(terraform output -raw pipeline_name)"
+
+    - name: Commit Terraform Files
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .
+        git commit -m "Update Terraform state" || echo "No changes to commit"
+        git push
