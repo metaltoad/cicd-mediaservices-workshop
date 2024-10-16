@@ -1,10 +1,5 @@
 # GitHub Actions OIDC Authentication module
 
-variable "github_repo" {
-  description = "The GitHub repository in the format 'owner/repo'"
-  type        = string
-}
-
 # Removed github_token variable as it's no longer needed with CodeStar connections
 
 resource "aws_codestarconnections_connection" "github_connection" {
@@ -167,11 +162,6 @@ resource "aws_iam_role" "github_actions_role" {
         Effect = "Allow"
         Principal = {
           Federated = aws_iam_openid_connect_provider.github_oidc.arn
-        }
-        Condition = {
-          StringLike = {
-            "token.actions.githubusercontent.com:sub": "repo:${var.github_repo}:*"
-          }
         }
       }
     ]
