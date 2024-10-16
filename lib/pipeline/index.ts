@@ -41,7 +41,16 @@ export class PipelineStack extends Stack {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           connectionArn: "arn:aws:codeconnections:us-east-1:593793053156:connection/0ce39d0d-884d-4915-bcd9-79978e8896dc", // Specify the existing connection ARN
         }),
-        commands: ["npm ci", "npm run build", "npx cdk synth"],
+        commands: [
+          "aws cloudformation deploy \
+          --template-file cloudformation/remote-state.yml \
+          --stack-name terraform-remote-state",
+          "terraform init",
+          "terraform plan",
+          "terraform apply -auto-approve",
+          "npm ci", 
+          "npm run build", 
+          "npx cdk synth"],
       }),
       codeBuildDefaults: {
         partialBuildSpec: BuildSpec.fromObject({
