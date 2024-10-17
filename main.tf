@@ -23,7 +23,6 @@ module "media_services" {
 
 module "pipeline" {
   source = "./modules/pipeline"
-  github_repo = "metaltoad/cicd-mediaservices-workshop"
 }
 
 module "lambda_functions" {

@@ -1,5 +1,11 @@
 # GitHub Actions OIDC Authentication module
 
+variable "github_repo" {
+  description = "The GitHub repository in the format 'owner/repo'"
+  type        = string
+  default = "metaltoad/cicd-mediaservices-workshop"
+}
+
 # Removed github_token variable as it's no longer needed with CodeStar connections
 
 resource "aws_codestarconnections_connection" "github_connection" {
