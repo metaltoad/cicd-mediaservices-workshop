@@ -1,33 +1,93 @@
 # Media Services module
 
-resource "aws_mediapackage_channel" "channel" {
+resource "aws_media_package_channel" "channel" {
   channel_id = "workshop-channel"
   description = "Media Package Channel for Workshop"
 }
 
-resource "aws_mediapackage_origin_endpoint" "hls_endpoint" {
-  channel_id = aws_mediapackage_channel.channel.id
-  id         = "${aws_mediapackage_channel.channel.channel_id}-hls"
+//resource "aws_media_package_origin_endpoint" "hls_endpoint" {
+//  channel_id = aws_mediapackage_channel.channel.id
+//  id         = "${aws_mediapackage_channel.channel.channel_id}-hls"//
 
-  hls_package {
-    segment_duration_seconds = 6
-    playlist_window_seconds  = 60
-  }
-}
+//  hls_package {
+//    segment_duration_seconds = 6
+//    playlist_window_seconds  = 60
+//  }
+//}
 
 resource "aws_medialive_channel" "channel" {
   name = "workshop-channel"
-
+  channel_class = "STANDARD"
   input_specification {
     codec            = "AVC"
     maximum_bitrate  = "MAX_20_MBPS"
-    resolution       = "HD"
+    input_resolution = "HD"
+  }
+  input_attachments {
+    input_attachment_name = "CDN"
+    input_id = aws_medialive_input.input.id
   }
 
-  channel_class = "STANDARD"
+  destinations {
+    id = "CDN"
+    settings {
+      url = aws_cloudfront_distribution.distribution.domain_name
+    }
+  }
+
+  encoder_settings {
+    timecode_config {
+        source = "SYSTEMCLOCK"
+    }
+    audio_descriptions {
+      audio_selector_name = "Sample name"
+      name = "audio_1"
+      audio_type_control = "FOLLOW_INPUT"
+      language_code_control = "FOLLOW_INPUT"
+      codec_settings {
+        aac_settings {
+          bitrate = 192000
+          coding_mode = "CODING_MODE_2_0"
+          sample_rate = 48000
+        }
+      }
+    }
+    video_descriptions {
+      name = "video_1"
+      codec_settings {
+        h264_settings {
+          profile = "HIGH"
+          level   = "4.1"
+        }
+      }
+    }
+    output_groups {
+      name = "HLS"
+      output_group_settings {
+        hls_group_settings {
+          segment_length = 10
+          destination {
+            destination_ref_id = "CDN"
+          }
+        }
+      }
+    
+      outputs {
+        output_name ="CDN_output"
+        output_settings {
+          multiplex_output_settings {
+            destination {
+              destination_ref_id = "CDN"
+            }
+          }
+          }
+        }
+      }
+    }
+}
 
   # Add more configuration as needed
-}
+
 
 resource "aws_cloudfront_distribution" "distribution" {
   enabled             = true
@@ -103,7 +163,7 @@ resource "aws_cloudwatch_dashboard" "media_dashboard" {
 
         properties = {
           metrics = [
-            ["AWS/MediaPackage", "EgressBytes", "ChannelId", aws_mediapackage_channel.channel.id]
+            ["AWS/MediaPackage", "EgressBytes", "ChannelId", aws_media_package_channel.channel.id]
           ]
           view    = "timeSeries"
           stacked = false
