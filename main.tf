@@ -37,14 +37,6 @@ output "hls_endpoint_url" {
   value = module.media_services.hls_endpoint_url
 }
 
-output "codecommit_repo_url" {
-  value = module.pipeline.codecommit_repo_url
-}
-
-output "pipeline_name" {
-  value = module.pipeline.pipeline_name
-}
-
 output "lambda_api_url" {
   value = module.lambda_functions.api_invoke_url
 }
