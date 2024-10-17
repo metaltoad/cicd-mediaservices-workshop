@@ -26,6 +26,11 @@ module "pipeline" {
   github_repo = "metaltoad/cicd-mediaservices-workshop"
 }
 
+module "lambda_functions" {
+  source = "./modules/lambdaFunction"
+  mediatailor_configuration_name = var.mediatailor_configuration_name
+}
+
 output "cloudfront_domain_name" {
   value = module.media_services.cloudfront_domain_name
 }
@@ -40,4 +45,8 @@ output "codecommit_repo_url" {
 
 output "pipeline_name" {
   value = module.pipeline.pipeline_name
+}
+
+output "lambda_api_url" {
+  value = module.lambda_functions.api_invoke_url
 }

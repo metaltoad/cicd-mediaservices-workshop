@@ -1,0 +1,65 @@
+<VAST xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="3.0">
+<Ad sequence="3">
+<InLine>
+<AdSystem>2.0</AdSystem>
+<AdTitle>AD-caribbean2-15</AdTitle>
+<Impression>
+<![CDATA[ https://n8ljfs0h09.execute-api.us-west-2.amazonaws.com/v1/impression ]]>
+</Impression>
+<Creatives>
+<Creative>
+<Linear>
+<Duration>00:00:15</Duration>
+<MediaFiles>
+<MediaFile id="00002" delivery="progressive" type="video/mp4" width="1280" height="720">
+<![CDATA[ https://d3re4i3vgppvr8.cloudfront.net/Media/Bumpers/AD-caribbean2-15-HD.mp4 ]]>
+</MediaFile>
+</MediaFiles>
+</Linear>
+</Creative>
+</Creatives>
+</InLine>
+</Ad>
+<Ad sequence="4">
+<InLine>
+<AdSystem>2.0</AdSystem>
+<AdTitle>AD-perfume-15</AdTitle>
+<Impression>
+<![CDATA[ https://n8ljfs0h09.execute-api.us-west-2.amazonaws.com/v1/impression ]]>
+</Impression>
+<Creatives>
+<Creative>
+<Linear>
+<Duration>00:00:15</Duration>
+<MediaFiles>
+<MediaFile id="00005" delivery="progressive" type="video/mp4" width="1280" height="720">
+<![CDATA[ https://d3re4i3vgppvr8.cloudfront.net/Media/Bumpers/AD-perfume-15-HD.mp4 ]]>
+</MediaFile>
+</MediaFiles>
+</Linear>
+</Creative>
+</Creatives>
+</InLine>
+</Ad>
+<Ad sequence="6">
+<InLine>
+<AdSystem>2.0</AdSystem>
+<AdTitle>AD-polarbear-15</AdTitle>
+<Impression>
+<![CDATA[ https://n8ljfs0h09.execute-api.us-west-2.amazonaws.com/v1/impression ]]>
+</Impression>
+<Creatives>
+<Creative>
+<Linear>
+<Duration>00:00:15</Duration>
+<MediaFiles>
+<MediaFile id="00006" delivery="progressive" type="video/mp4" width="1280" height="720">
+<![CDATA[ https://d3re4i3vgppvr8.cloudfront.net/Media/Bumpers/AD-polarbear-15-HD.mp4 ]]>
+</MediaFile>
+</MediaFiles>
+</Linear>
+</Creative>
+</Creatives>
+</InLine>
+</Ad>
+</VAST>
