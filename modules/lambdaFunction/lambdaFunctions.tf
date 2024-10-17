@@ -82,6 +82,10 @@ output "lambda_function_arn" {
 }
 
 
-output "lambda_api_url" {
+output "function_name" {
   value = aws_lambda_function.mediatailor_ad_insertion.function_name
+}
+
+output "api_invoke_arn" {
+  value = aws_lambda_function.mediatailor_ad_insertion.lambda_function_invoke_arn
 }
