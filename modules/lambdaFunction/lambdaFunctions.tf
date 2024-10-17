@@ -8,12 +8,6 @@ resource "aws_lambda_function" "mediatailor_ad_insertion" {
   filename      = "lambda_function.zip"
   role          = aws_iam_role.lambda_exec_role.arn
 
-  environment {
-    variables = {
-      MEDIATAILOR_CONFIGURATION_NAME = var.mediatailor_configuration_name
-    }
-  }
-
   timeout      = 60
   memory_size  = 128
 
