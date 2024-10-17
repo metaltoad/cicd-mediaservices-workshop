@@ -28,7 +28,6 @@ module "pipeline" {
 
 module "lambda_functions" {
   source = "./modules/lambdaFunction"
-  mediatailor_configuration_name = var.mediatailor_configuration_name
 }
 
 output "cloudfront_domain_name" {
