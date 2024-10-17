@@ -1,3 +1,6 @@
+variable "mediatailor_configuration_name" {
+  default = ""
+}
 resource "aws_lambda_function" "mediatailor_ad_insertion" {
   function_name = "mediatailor_ad_insertion"
   handler       = "lambda_function.lambda_handler"
