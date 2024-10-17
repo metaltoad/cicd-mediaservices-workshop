@@ -3,18 +3,16 @@
 resource "aws_media_package_channel" "channel" {
   channel_id = "workshop-channel"
   description = "Media Package Channel for Workshop"
+  hls_ingest {
+    ingest_endpoints {
+      url = "https://d3hx2mfjmfgdc.cloudfront.net/v1/ads?duration=45"
+    }
+  }
 }
-
-//resource "aws_media_package_origin_endpoint" "hls_endpoint" {
-//  channel_id = aws_mediapackage_channel.channel.id
-//  id         = "${aws_mediapackage_channel.channel.channel_id}-hls"//
-
-//  hls_package {
-//    segment_duration_seconds = 6
-//    playlist_window_seconds  = 60
-//  }
-//}
-
+resource "aws_medialive_input" "channel_input" {
+  name = "workshop-channel-input"
+  type = "https://d15an60oaeed9r.cloudfront.net/live_stream_v2/sports_reel_with_markers.m3u8"
+}
 resource "aws_medialive_channel" "channel" {
   name = "workshop-channel"
   channel_class = "STANDARD"
@@ -25,7 +23,7 @@ resource "aws_medialive_channel" "channel" {
   }
   input_attachments {
     input_attachment_name = "CDN"
-    input_id = aws_medialive_input.input.id
+    input_id = aws_medialive_input.channel_input.id
   }
 
   destinations {
@@ -94,8 +92,8 @@ resource "aws_cloudfront_distribution" "distribution" {
   default_root_object = "index.html"
 
   origin {
-    domain_name = aws_mediapackage_origin_endpoint.hls_endpoint.url
-    origin_id   = aws_mediapackage_origin_endpoint.hls_endpoint.id
+    domain_name = aws_media_package_origin_endpoint.hls_endpoint.url
+    origin_id   = aws_media_package_origin_endpoint.hls_endpoint.id
 
     custom_origin_config {
       http_port              = 80
@@ -108,7 +106,7 @@ resource "aws_cloudfront_distribution" "distribution" {
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = aws_mediapackage_origin_endpoint.hls_endpoint.id
+    target_origin_id       = aws_media_package_origin_endpoint.hls_endpoint.id
     viewer_protocol_policy = "redirect-to-https"
     min_ttl                = 0
     default_ttl            = 3600
@@ -146,7 +144,7 @@ resource "aws_cloudwatch_dashboard" "media_dashboard" {
 
         properties = {
           metrics = [
-            ["AWS/MediaLive", "NetworkIn", "ChannelId", aws_medialive_channel.channel.id],
+            ["AWS/MediaLive", "NetworkIn", "ChannelId", aws_medialive_input.channel_input.id],
             [".", "NetworkOut", ".", "."]
           ]
           view    = "timeSeries"
