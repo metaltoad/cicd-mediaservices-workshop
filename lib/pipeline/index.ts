@@ -48,7 +48,7 @@ export class PipelineStack extends Stack {
           "curl -O https://releases.hashicorp.com/terraform/0.12.6/terraform_0.12.6_linux_amd64.zip",
           "unzip terraform_0.12.6_linux_amd64.zip -d /usr/bin/",
           "chmod +x /usr/bin/terraform",
-          "terraform init",
+          "terraform init -upgrade -backend-config='bucket=ourteam-terraform-dev' -backend-config='key=mediahackathon.tfstate' -backend-config='region=us-east-1' -backend=true",
           "terraform plan",
           "terraform apply -auto-approve",
           "npm ci", 
