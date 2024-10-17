@@ -75,3 +75,13 @@ resource "aws_lambda_function_event_invoke_config" "lambda_invoke_config" {
   maximum_retry_attempts      = 2
   maximum_event_age_in_seconds = 60
 }
+
+
+output "lambda_function_arn" {
+  value = aws_lambda_function.mediatailor_ad_insertion.arn
+}
+
+
+output "lambda_api_url" {
+  value = aws_lambda_function.mediatailor_ad_insertion.function_name
+}
